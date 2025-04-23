@@ -61,9 +61,34 @@ Then, add a `<Tracker>` tag inside `<jPlayer>`:
     id="player"
 >
     <source
+        src="/music/song1.mp3"
+        title="Never Gonna Give You Up"
+        artist="Rick Astley"
+        album="Whenever You Need Somebody"
+        albumArt="/test.png"
+    />
+    <source
         src="/music/eek.it"
         title="eek!"
         artist="Surasshu"
+        albumArt="/test.png"
+    />
+</jPlayer>
+```
+
+## Solo Track mode
+We also have support for single track only, without the playlist panel obstructing view! Just add the `solo` attribute on the `<jPlayer>` tag:
+```html
+<jPlayer
+    title="My Music Player"
+    id="player"
+    solo
+>
+    <source
+        src="/music/song1.mp3"
+        title="Never Gonna Give You Up"
+        artist="Rick Astley"
+        album="Whenever You Need Somebody"
         albumArt="/test.png"
     />
 </jPlayer>
