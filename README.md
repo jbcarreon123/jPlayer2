@@ -44,7 +44,7 @@ To add songs, just add a `<source>` tag inside `<jPlayer>`:
 ```
 
 ## Tracker files
-To have support for tracker files, download the `chiptune2.js` library found here and the `libopenmpt` library found here (note: download the Web version!), and add it above the jTracker JS import (make sure it's on this order or it won't work!):
+To have support for tracker files, download the `chiptune2.js` library found here and the `libopenmpt` library found here (note: download the Web version!), and add it above the jPlayer JS import (make sure it's on this order or it won't work!):
 ```html
 <head>
     <script src="/where/is/libopenmpt.js"></script>
@@ -54,7 +54,7 @@ To have support for tracker files, download the `chiptune2.js` library found her
 </head>
 ```
 
-Then, add a `<Tracker>` tag inside `<jPlayer>`:
+Then, add a `<source>` tag inside `<jPlayer>`:
 ```html
 <jPlayer
     title="My Music Player"
