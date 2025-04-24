@@ -107,5 +107,6 @@ For accessibility reasons, I decided to not support native autoplay on jPlayer2,
 If you're using Neocities with a free account beyond 2024, you will discover a Content Security Policy error that prevents you from loading the player or the audio files.
 There are some solutions for this:
 - Host the files straight from your Neocities site, but that means you will lose Tracker support because tracker files is not on the approved file types for free Neocities accounts,
-- Switch to another web host that doesn't have this issue, like Nekoweb or GitHub pages if you need tracker support, or
+- Switch to another web host that doesn't have this issue, like Nekoweb or GitHub pages if you need tracker support,
+- Use a file hosting platform like file.garden (which I don't recommend doing), or
 - Get Neocities' supporter plan, which removes the CSP and file type limitations.
