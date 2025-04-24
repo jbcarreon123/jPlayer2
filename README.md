@@ -2,6 +2,11 @@
 A no-nonsense modern web player, designed for the indie web.
 Based on [duducat-music-player](https://github.com/ducdat0507/stuff/tree/main/music-player).
 
+![image](https://github.com/user-attachments/assets/02999760-ecbd-485e-9e1b-b706838e67eb)
+![image](https://github.com/user-attachments/assets/dd0b16bf-e2b8-4f38-a2fb-a81cbc31180b)
+
+## Demo!
+
 ## Features
 - Easy installation and maintinance, no JS modifications required!
 - Add tracks like the HTML `<audio>` tag, just add `<source>` inside the `<player-container>` element and you're good to go!
