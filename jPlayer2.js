@@ -225,7 +225,8 @@ class jPlayer extends HTMLElement {
                     })
                 }
 
-                if (position == duration) {
+                if (position > 1 && duration > 1 && position >= duration - 0.1) {
+                    console.log('next mod track')
                     this.nextTrack();
                 }
             } else {
@@ -330,6 +331,7 @@ class jPlayer extends HTMLElement {
         let el = this.#playlistContainer.querySelector('.playlist-item.playing')
         let tracks = this.#playlistContainer.querySelectorAll('.playlist-item')
         if (this._repeatOne == true) {
+            console.log('repeat one, repeating track')
             this.progressChanged({value: 0});
             return;
         } else if (this._shuffle) {
