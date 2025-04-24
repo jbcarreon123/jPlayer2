@@ -383,6 +383,7 @@ class jPlayer extends HTMLElement {
                 this._trackerPlayer.currentPlayingNode.addEventListener('timeupdate', () => this.progress());
                 if (!isPlaying)
                     this.playPause(playPause);
+                navigator.mediaSession.playbackState = 'playing';
             });
         } else {
             this._trackerPlayer.stop();
