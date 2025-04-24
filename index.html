@@ -6,9 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>jPlayer2</title>
 
-    <script src="/jPlayer2/demo/libopenmpt.js"></script>
-    <script src="/jPlayer2/demo/chiptune2.js"></script>
-    <script src="/jPlayer2/jPlayer2.js"></script>
+    <style>
+        @font-face {
+            font-family: 'Material Symbols';
+            src: url('/jPlayer2/demo/MaterialSymbols.woff2');
+        }
+    
+        @font-face {
+            font-family: Inter;
+            src: url(/jPlayer2/demo/Inter-Variable.ttf);
+            font-display: swap;
+        }
+    
+        * {
+            padding: 0;
+            margin: 0;
+        }
+    
+        body {
+            padding: 12px;
+            background-color: black;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+    
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
 
     <meta property="og:type" content="website">
     <meta property="og:title" content="jPlayer2">
@@ -18,6 +44,10 @@
 </head>
 
 <body>
+    <script src="/jPlayer2/demo/libopenmpt.js"></script>
+    <script src="/jPlayer2/demo/chiptune2.js"></script>
+    <script src="/jPlayer2/jPlayer2.js"></script>
+
     <main>
         <h1>jPlayer2</h1>
         <p>A modern web music player, made by jbcarreon123.</p>
@@ -54,35 +84,5 @@
         </player-container>
     </main>
 </body>
-
-<style>
-    @font-face {
-        font-family: 'Material Symbols';
-        src: url('/jPlayer2/demo/MaterialSymbols.woff2');
-    }
-
-    @font-face {
-        font-family: Inter;
-        src: url(/jPlayer2/demo/Inter-Variable.ttf);
-        font-display: swap;
-    }
-
-    * {
-        padding: 0;
-        margin: 0;
-    }
-
-    body {
-        padding: 12px;
-        background-color: black;
-        color: white;
-        font-family: 'Inter', sans-serif;
-    }
-
-    main {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-</style>
 
 </html>
