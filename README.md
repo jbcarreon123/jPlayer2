@@ -103,3 +103,9 @@ We also have support for single track only, without the playlist panel obstructi
 ## FAQ
 ### How can I autoplay music on jPlayer?
 For accessibility reasons, I decided to not support native autoplay on jPlayer2, so there will be no `autoplay` attribute. But if you wish, you can just hook to the `loaded` event of the player and just do play status there.
+### I'm using Neocities with a free account, and can't seem to load jPlayer2 or the audio files.
+If you're using Neocities with a free account beyond 2024, you will discover a Content Security Policy error that prevents you from loading the player or the audio files.
+There are some solutions for this:
+- Host the files straight from your Neocities site, but that means you will lose Tracker support because tracker files is not on the approved file types for free Neocities accounts,
+- Switch to another web host that doesn't have this issue, like Nekoweb or GitHub pages if you need tracker support, or
+- Get Neocities' supporter plan, which removes the CSP and file type limitations.
