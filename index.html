@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jPlayer2</title>
+
+    <script src="/demo/libopenmpt.js"></script>
+    <script src="/demo/chiptune2.js"></script>
+    <script src="./jPlayer2.js"></script>
+</head>
+
+<body>
+    <main>
+        <h1>jPlayer2</h1>
+        <p>A modern web music player, made by jbcarreon123.</p>
+        <p>Based on <a href="https://duducat.moe/stuff/music-player/" target="_blank">duducat-music-player</a>.</p>
+        <br />
+        <p>Demo tracker music files came from <a href="https://modarchive.org" target="_blank">The Mod Archive</a>.</p>
+
+        <br />
+
+        <h2>Normal mode</h2>
+        <player-container id="player" css="../jPlayer2.css" fallback="fallback.png">
+            <p id="controls--next" class="sm">next</p>
+            <source src="/demo/music/song1.mp3" />
+            <source src="/demo/music/song2.mp3" />
+            <source src="/demo/music/song3.mp3" />
+            <source src="/demo/music/eek.it" />
+            <source src="/demo/music/twins-throwabomb.mod" />
+        </player-container>
+
+        <br />
+
+        <h2>Solo/No Playlist View mode</h2>
+        <player-container id="player2" css="../jPlayer2.css" solo="true">
+            <source src="/demo/music/eek.it" />
+        </player-container>
+        <br />
+        <player-container id="player2" css="../jPlayer2.css" solo="true">
+            <source src="/demo/music/song1.mp3" />
+            <source src="/demo/music/song2.mp3" />
+            <source src="/demo/music/song3.mp3" />
+            <source src="/demo/music/eek.it" />
+            <source src="/demo/music/twins-throwabomb.mod" />
+        </player-container>
+    </main>
+</body>
+
+<style>
+    @font-face {
+        font-family: 'Material Symbols';
+        src: url('/demo/MaterialSymbols.woff2');
+    }
+
+    @font-face {
+        font-family: Inter;
+        src: url(/demo/Inter-Variable.ttf);
+        font-display: swap;
+    }
+
+    * {
+        padding: 0;
+        margin: 0;
+    }
+
+    body {
+        padding: 12px;
+        background-color: black;
+        color: white;
+        font-family: 'Inter', sans-serif;
+    }
+
+    main {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+</style>
+
+</html>

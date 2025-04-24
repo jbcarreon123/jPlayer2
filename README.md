@@ -4,7 +4,7 @@ Based on [duducat-music-player](https://github.com/ducdat0507/stuff/tree/main/mu
 
 ## Features
 - Easy installation and maintinance, no JS modifications required!
-- Add tracks like the HTML `<audio>` tag, just add `<source>` inside the `<jPlayer>` element and you're good to go!
+- Add tracks like the HTML `<audio>` tag, just add `<source>` inside the `<player-container>` element and you're good to go!
 - Support for tracker files, from Modtracker, to Impulse Tracker, using the custom `<Tracker>` element
 - Support for the MediaSession API, ensuring that viewers can see the now playing track system-wide
 
@@ -19,17 +19,17 @@ To add jPlayer2 on your site, firstly download the `jPlayer2.js` and `jPlayer2.c
 
 Then, add it on anywhere on your site:
 ```html
-<jPlayer
+<player-container
     title="My Music Player"
     id="player"
 >
     <!-- Playlist tracks here -->
-</jPlayer>
+</player-container>
 ```
 
-To add songs, just add a `<source>` tag inside `<jPlayer>`:
+To add songs, just add a `<source>` tag inside `<player-container>`:
 ```html
-<jPlayer
+<player-container
     title="My Music Player"
     id="player"
 >
@@ -40,7 +40,7 @@ To add songs, just add a `<source>` tag inside `<jPlayer>`:
         album="Whenever You Need Somebody"
         albumArt="/test.png"
     />
-</jPlayer>
+</player-container>
 ```
 
 ## Tracker files
@@ -54,9 +54,9 @@ To have support for tracker files, download the `chiptune2.js` library found her
 </head>
 ```
 
-Then, add a `<source>` tag inside `<jPlayer>`:
+Then, add a `<source>` tag inside `<player-container>`:
 ```html
-<jPlayer
+<player-container
     title="My Music Player"
     id="player"
 >
@@ -73,13 +73,13 @@ Then, add a `<source>` tag inside `<jPlayer>`:
         artist="Surasshu"
         albumArt="/test.png"
     />
-</jPlayer>
+</player-container>
 ```
 
 ## Solo Track mode
-We also have support for single track only, without the playlist panel obstructing view! Just add the `solo` attribute on the `<jPlayer>` tag:
+We also have support for single track only, without the playlist panel obstructing view! Just add the `solo` attribute on the `<player-container>` tag:
 ```html
-<jPlayer
+<player-container
     title="My Music Player"
     id="player"
     solo
@@ -91,5 +91,9 @@ We also have support for single track only, without the playlist panel obstructi
         album="Whenever You Need Somebody"
         albumArt="/test.png"
     />
-</jPlayer>
+</player-container>
 ```
+
+## FAQ
+### How can I autoplay music on jPlayer?
+For accessibility reasons, I decided to not support native autoplay on jPlayer2, so there will be no `autoplay` attribute. But if you wish, you can just hook to the `loaded` event of the player and just do play status there.
