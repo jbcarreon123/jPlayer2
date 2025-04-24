@@ -225,7 +225,7 @@ class jPlayer extends HTMLElement {
                     })
                 }
 
-                if (position > 1 && duration > 1 && position >= duration - 0.1) {
+                if (position > 1 && duration > 1 && position >= Math.round(duration)) {
                     console.log('next mod track')
                     this.nextTrack();
                 }
@@ -268,10 +268,12 @@ class jPlayer extends HTMLElement {
         }
     }
 
-    playPause(el) {
+    playPause(el, play = undefined) {
         let paused = false;
         if (this._trackerPlayer.currentPlayingNode !== null) {
-            this._trackerPlayer.togglePause();
+            if ((play == undefined || (play == true && this._trackerPlayer.currentPlayingNode.paused))) {
+                this._trackerPlayer.togglePause();
+            }
             paused = !this._trackerPlayer.currentPlayingNode.paused;
             if (!paused) {
                 el.innerHTML = 'play_arrow';
@@ -282,7 +284,7 @@ class jPlayer extends HTMLElement {
             }
         } else {
             paused = this._audioPlayer.paused
-            if (paused) {
+            if (paused || play) {
                 this._audioPlayer.play();
                 el.innerHTML = 'pause';
                 console.log('paused')
@@ -333,11 +335,15 @@ class jPlayer extends HTMLElement {
         if (this._repeatOne == true) {
             console.log('repeat one, repeating track')
             this.progressChanged({value: 0});
+            let playPause = this.#playingContainer.querySelector('#playpause');
+            this.playPause(playPause, true);
             return;
         } else if (this._shuffle) {
             this.playTrack(tracks.item(getRandomArbitrary(0, tracks.length - 1)))
             return;
         }
+        this._audioPlayer.pause();
+        this._trackerPlayer.stop();
         let trackVal = Object.values(tracks);
         let track = trackVal.find((val) => val.dataset.src === el.dataset.src);
         let trackIndex = trackVal.indexOf(track);
