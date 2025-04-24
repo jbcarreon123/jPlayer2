@@ -15,12 +15,12 @@ Based on [duducat-music-player](https://github.com/ducdat0507/stuff/tree/main/mu
 - Support for the MediaSession API, ensuring that viewers can see the now playing track system-wide
 
 ## Installation
-To add jPlayer2 on your site, firstly download the `jPlayer2.js` and `jPlayer2.css`, and add it to your site's `<head>` like this:
+To add jPlayer2 on your site, firstly download the `jPlayer2.js` and `jPlayer2.css`, and add it on the top inside your site's `<body>` like this:
 ```html
-<head>
+<body>
     <script src="/where/is/jPlayer2.js"></script>
     <link rel="stylesheet" href="/where/is/jPlayer2.css">
-</head>
+</body>
 ```
 
 Then, add it on anywhere on your site:
