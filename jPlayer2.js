@@ -172,6 +172,17 @@ class jPlayer extends HTMLElement {
         this._observer.disconnect();
     }
 
+    seek(secs) {
+        if (this._trackerPlayer.currentPlayingNode !== null) {
+            let duration = this._trackerPlayer.duration();
+            let module = this._trackerPlayer.currentPlayingNode.modulePtr;
+            libopenmpt._openmpt_module_set_position_seconds(module, secs);
+        } else {
+            let duration = this._audioPlayer.duration;
+            this._audioPlayer.currentTime = secs;
+        }
+    }
+
     progressChanged(el) {
         if (this._trackerPlayer.currentPlayingNode !== null) {
             let duration = this._trackerPlayer.duration();
@@ -283,7 +294,9 @@ class jPlayer extends HTMLElement {
         }
 
         if ("mediaSession" in navigator) {
+            console.log(paused);
             navigator.mediaSession.playbackState = paused? "playing" : "paused";
+            console.log(navigator.mediaSession.playbackState);
         }
     }
 
@@ -337,6 +350,8 @@ class jPlayer extends HTMLElement {
         let track = this._fetchedPlaylist.find(({src}) => src === el.dataset.src);
         let data = await this.processMetadata(el, track, this._fetchedPlaylist.indexOf(track));
 
+        let playPause = this.#playingContainer.querySelector('#playpause');
+
         this.#playingContainer.querySelector('.album-art-container img').src = el.dataset.art;
         this.#playingContainer.querySelector('.card-background img').src = el.dataset.art;
 
@@ -354,17 +369,19 @@ class jPlayer extends HTMLElement {
             this._audioPlayer.pause();
             this._trackerPlayer.stop();
             this._trackerPlayer.load(el.dataset.src, (out) => {
+                console.log(el.dataset.src);
+                console.log(out);
                 this._trackerPlayer.play(out)
                 this._trackerPlayer.currentPlayingNode.addEventListener('timeupdate', () => this.progress());
                 if (!isPlaying)
-                    this._trackerPlayer.togglePause();
+                    this.playPause(playPause);
             });
         } else {
             this._trackerPlayer.stop();
             this._audioPlayer.src = el.dataset.src;
             this._audioPlayer.load();
             if (isPlaying)
-                this._audioPlayer.play();
+                this.playPause(playPause);
         }
 
         if ("mediaSession" in navigator) {
@@ -378,6 +395,12 @@ class jPlayer extends HTMLElement {
                     type: getType(el.dataset.art)
                 }]
             });
+
+            navigator.mediaSession.setActionHandler('nexttrack', () => this.nextTrack());
+            navigator.mediaSession.setActionHandler('previoustrack', () => this.prevTrack());
+            navigator.mediaSession.setActionHandler('play', () => this.playPause(playPause));
+            navigator.mediaSession.setActionHandler('pause', () => this.playPause(playPause));
+            navigator.mediaSession.setActionHandler('seekto', (secs) => this.seek(secs.seekTime));
         }
     }
 
@@ -435,19 +458,31 @@ class jPlayer extends HTMLElement {
     async processTrackerMetadata(el, buffer, index, error) {
         if (this._trackerPlayer) {
             return new Promise((resolve) => {
-                this._trackerPlayer.play(buffer);
-                const metadata = this._trackerPlayer.metadata();
-                this._trackerPlayer.stop();
-                const trackInfo = {
-                    src: el.src,
-                    title: metadata['title'] ?? el.dataset.title ?? "Unknown title",
-                    artist: metadata['artist'] ?? el.dataset.artist ?? "Unknown artist",
-                    album: '',
-                    art: el.dataset.art ?? this._fallback
-                };
-                trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0, 'tracker');
-                console.log(trackInfo);
-                resolve(trackInfo);
+                try {
+                    this._trackerPlayer.play(buffer);
+                    const metadata = this._trackerPlayer.metadata();
+                    this._trackerPlayer.stop();
+                    const trackInfo = {
+                        src: el.src,
+                        title: metadata['title'] ?? el.dataset.title ?? "Unknown title",
+                        artist: metadata['artist'] ?? el.dataset.artist ?? "Unknown artist",
+                        album: '',
+                        art: el.dataset.art ?? this._fallback
+                    };
+                    trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0, 'tracker');
+                    console.log(trackInfo);
+                    resolve(trackInfo);
+                } catch {
+                    const trackInfo = {
+                        src: el.src,
+                        title: el.dataset.title ?? "Unknown title",
+                        artist: el.dataset.artist ?? "Unknown artist",
+                        album: '',
+                        art: el.dataset.art ?? this._fallback
+                    };
+                    trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0, 'tracker');
+                    resolve(trackInfo);
+                }
             });
         } else {
             const trackInfo = {
