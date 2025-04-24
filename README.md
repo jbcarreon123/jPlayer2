@@ -6,6 +6,7 @@ Based on [duducat-music-player](https://github.com/ducdat0507/stuff/tree/main/mu
 ![image](https://github.com/user-attachments/assets/dd0b16bf-e2b8-4f38-a2fb-a81cbc31180b)
 
 ## Demo!
+### https://jbcarreon123.github.io/jPlayer2/
 
 ## Features
 - Easy installation and maintinance, no JS modifications required!
