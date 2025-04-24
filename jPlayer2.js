@@ -429,7 +429,15 @@ class jPlayer extends HTMLElement {
                 resolve(trackInfo);
             });
         } else {
-            throw error;
+            const trackInfo = {
+                src: el.src,
+                title: el.dataset.title ?? "Unknown title",
+                artist: el.dataset.artist ?? "Unknown artist",
+                album: '',
+                art: el.dataset.art ?? this._fallback
+            };
+            trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0, 'tracker');
+            resolve(trackInfo);
         }
     }
     
