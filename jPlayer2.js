@@ -207,6 +207,13 @@ class jPlayer extends HTMLElement {
                 val = Object.is(val, NaN) ? 0 : val;
                 prg.value = val;
 
+                if ("mediaSession" in navigator) {
+                    navigator.mediaSession.setPositionState({
+                        duration: duration,
+                        position: position
+                    })
+                }
+
                 if (position == duration) {
                     this.nextTrack();
                 }
@@ -218,6 +225,13 @@ class jPlayer extends HTMLElement {
                 let val = ((position ?? 0) / (duration ?? 0)) * 100;
                 val = Object.is(val, NaN) ? 0 : val;
                 prg.value = val;
+
+                if ("mediaSession" in navigator) {
+                    navigator.mediaSession.setPositionState({
+                        duration: duration,
+                        position: position
+                    })
+                }
             }
         } catch {}
     }
@@ -243,9 +257,11 @@ class jPlayer extends HTMLElement {
     }
 
     playPause(el) {
+        let paused = false;
         if (this._trackerPlayer.currentPlayingNode !== null) {
             this._trackerPlayer.togglePause();
-            if (this._trackerPlayer.currentPlayingNode.paused) {
+            paused = !this._trackerPlayer.currentPlayingNode.paused;
+            if (!paused) {
                 el.innerHTML = 'play_arrow';
                 console.log('paused')
             } else {
@@ -253,7 +269,8 @@ class jPlayer extends HTMLElement {
                 console.log('playing')
             }
         } else {
-            if (this._audioPlayer.paused) {
+            paused = this._audioPlayer.paused
+            if (paused) {
                 this._audioPlayer.play();
                 el.innerHTML = 'pause';
                 console.log('paused')
@@ -263,6 +280,10 @@ class jPlayer extends HTMLElement {
                 console.log(el);
                 console.log('playing')
             }
+        }
+
+        if ("mediaSession" in navigator) {
+            navigator.mediaSession.playbackState = paused? "playing" : "paused";
         }
     }
 
