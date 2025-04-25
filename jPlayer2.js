@@ -221,7 +221,7 @@ class jPlayer extends HTMLElement {
                 if ("mediaSession" in navigator) {
                     navigator.mediaSession.setPositionState({
                         duration: duration,
-                        position: position
+                        position: position - 10
                     })
                 }
 
@@ -241,7 +241,7 @@ class jPlayer extends HTMLElement {
                 if ("mediaSession" in navigator) {
                     navigator.mediaSession.setPositionState({
                         duration: duration,
-                        position: position
+                        position: position - 10
                     })
                 }
             }
