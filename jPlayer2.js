@@ -20,6 +20,15 @@ class jPlayer extends HTMLElement {
         Modify this if you want to have a custom widget.
         Moderate JS knowledge required.
      */
+    renderLoading() {
+        return /* html */`
+            <article>
+                <h1>Please wait... jPlayer2 is loading...</h1>
+                <p id="jplayer--loading-status"></p>
+            </article>
+        `
+    }
+
     renderPlaylistItem(track, isFirst, mode) {
         return /* html */ `
             <button class="playlist-item${isFirst ? ' playing' : ''}"${mode ? ` data-mode=${mode}` : ''} data-src=${track.src} data-art=${track.art}>
@@ -169,6 +178,8 @@ class jPlayer extends HTMLElement {
         if (typeof window.jsmediatags !== 'undefined') {
             this._mediaTags = window.jsmediatags;
         }
+
+        this._shadow.innerHTML = this.renderLoading();
     }
 
     emit(type, detail = {}) {
@@ -456,6 +467,8 @@ class jPlayer extends HTMLElement {
 
     async fetchTrackData(el) {
         try {
+            let loading = this._shadow.querySelector('#jplayer--loading-status');
+            if (loading) loading.textContent = `Fetching: ${el.src}`
             const response = await fetch(el.src);
             if (!response.ok) {
                 return { ok: false };
@@ -470,6 +483,8 @@ class jPlayer extends HTMLElement {
 
     async processMetadata(el, fetchedData, index, art = undefined) {
         if (fetchedData.ok) {
+            let loading = this._shadow.querySelector('#jplayer--loading-status');
+            if (loading) loading.textContent = `Processing metadata: ${el.src}`;
             try {
                 const metadata = readMetadata(fetchedData.buffer);
                 const trackInfo = {
@@ -567,7 +582,7 @@ class jPlayer extends HTMLElement {
     async updatePlaylist() {
         this._fallback = this.getAttribute('fallback');
         this._playlistSources = Array.from(this.querySelectorAll('source'));
-        this._fetchedPlaylist = await Promise.all(this._playlistSources.map(this.fetchTrackData));
+        this._fetchedPlaylist = await Promise.all(this._playlistSources.map((v) => this.fetchTrackData(v)));
         this._playlist = await Promise.all(this._playlistSources.map((el, index) =>
             this.processMetadata(el, this._fetchedPlaylist[index], index)
         ));
