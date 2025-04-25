@@ -69,7 +69,7 @@ class jPlayer extends HTMLElement {
                         </div>
                     </div>
                     <div class="progress">
-                        <input type="range" min="0" max="100" value="0">
+                        <input type="range" min="0" max="10000" value="0">
                     </div>
                     <div class="card-background">
                         <img src="${currentTrack?.art}" alt="">
@@ -187,10 +187,10 @@ class jPlayer extends HTMLElement {
         if (this._trackerPlayer.currentPlayingNode !== null) {
             let duration = this._trackerPlayer.duration();
             let module = this._trackerPlayer.currentPlayingNode.modulePtr;
-            libopenmpt._openmpt_module_set_position_seconds(module, (el.value / 100) * duration);
+            libopenmpt._openmpt_module_set_position_seconds(module, (el.value / 10000) * duration);
         } else {
             let duration = this._audioPlayer.duration;
-            this._audioPlayer.currentTime = (el.value / 100) * duration;
+            this._audioPlayer.currentTime = (el.value / 10000) * duration;
         }
     }
 
@@ -214,7 +214,7 @@ class jPlayer extends HTMLElement {
                 let totalOrder = this._trackerPlayer.getTotalOrder();
                 pos.textContent = `${formatTime(position)}.${order}`;
                 dur.textContent = `${formatTime(duration)}.${totalOrder}`;
-                let val = ((position ?? 0) / (duration ?? 0)) * 100;
+                let val = ((position ?? 0) / (duration ?? 0)) * 10000;
                 val = Object.is(val, NaN) ? 0 : val;
                 prg.value = val;
 
@@ -234,7 +234,7 @@ class jPlayer extends HTMLElement {
                 let position = this._audioPlayer.currentTime;
                 pos.textContent = formatTime(position);
                 dur.textContent = formatTime(duration);
-                let val = ((position ?? 0) / (duration ?? 0)) * 100;
+                let val = ((position ?? 0) / (duration ?? 0)) * 10000;
                 val = Object.is(val, NaN) ? 0 : val;
                 prg.value = val;
 
