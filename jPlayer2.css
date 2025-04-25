@@ -414,10 +414,14 @@
     #jplayer--playing-card {
         .album-art-container {
             height: 64px !important;
-            
+
             img {
                 max-height: 64px !important;
             }
+        }
+
+        .now-playing-info {
+            max-width: 100% !important;
         }
     }
 
