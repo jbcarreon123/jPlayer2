@@ -22,7 +22,7 @@ class jPlayer extends HTMLElement {
      */
     renderPlaylistItem(track, isFirst, mode) {
         return /* html */ `
-            <button class="playlist-item${isFirst? ' playing' : ''}"${mode? ` data-mode=${mode}` : ''} data-src=${track.src} data-art=${track.art}>
+            <button class="playlist-item${isFirst ? ' playing' : ''}"${mode ? ` data-mode=${mode}` : ''} data-src=${track.src} data-art=${track.art}>
                 <div class="track-info-container">
                     <div class="album-art-container">
                         <img src="${track.art}" alt="">
@@ -155,6 +155,7 @@ class jPlayer extends HTMLElement {
         this._playlistSources = [];
         this._observer = new MutationObserver(async () => await this.updatePlaylist())
         this._audioPlayer = new Audio();
+        this._audioPlayer.addEventListener('durationchange', () => this.progress());
         this._audioPlayer.addEventListener('timeupdate', () => this.progress());
         this._audioPlayer.addEventListener('ended', () => this.nextTrack());
         this._style = this.querySelector('style');
@@ -242,7 +243,6 @@ class jPlayer extends HTMLElement {
                 }
 
                 if (position > 1 && duration > 1 && position >= (duration - 0.15)) {
-                    console.log('next mod track')
                     this.nextTrack();
                 }
 
@@ -265,7 +265,7 @@ class jPlayer extends HTMLElement {
 
                 this.emit('timeUpdate', position);
             }
-        } catch {}
+        } catch { }
     }
 
     repeat(el) {
@@ -286,7 +286,7 @@ class jPlayer extends HTMLElement {
         if (this._trackerPlayer.currentPlayingNode === null) {
             this._audioPlayer.loop = this._repeatOne;
         } else {
-            libopenmpt._openmpt_module_set_repeat_count(this._trackerNode.modulePtr, this._repeatOne? -1 : 0);
+            libopenmpt._openmpt_module_set_repeat_count(this._trackerNode.modulePtr, this._repeatOne ? -1 : 0);
         }
 
         this.emit('repeat', { all: this._repeat, one: this._repeat });
@@ -301,29 +301,22 @@ class jPlayer extends HTMLElement {
             paused = !this._trackerPlayer.currentPlayingNode.paused;
             if (!paused) {
                 el.innerHTML = 'play_arrow';
-                console.log('paused')
             } else {
                 el.innerHTML = 'pause';
-                console.log('playing')
             }
         } else {
             paused = this._audioPlayer.paused
             if (paused || play) {
                 this._audioPlayer.play();
                 el.innerHTML = 'pause';
-                console.log('paused')
             } else {
                 this._audioPlayer.pause();
                 el.innerHTML = 'play_arrow';
-                console.log(el);
-                console.log('playing')
             }
         }
 
         if ("mediaSession" in navigator) {
-            console.log(paused);
-            navigator.mediaSession.playbackState = paused? "playing" : "paused";
-            console.log(navigator.mediaSession.playbackState);
+            navigator.mediaSession.playbackState = paused ? "playing" : "paused";
         }
 
         this.emit('playChanged', !paused);
@@ -345,7 +338,7 @@ class jPlayer extends HTMLElement {
         let el = this.#playlistContainer.querySelector('.playlist-item.playing')
         let tracks = this.#playlistContainer.querySelectorAll('.playlist-item')
         if (this.getProgress() > 3) {
-            this.progressChanged({value: 0});
+            this.progressChanged({ value: 0 });
             return;
         } else if (this._shuffle) {
             this.playTrack(tracks.item(getRandomArbitrary(0, tracks.length - 1)));
@@ -361,9 +354,9 @@ class jPlayer extends HTMLElement {
         let el = this.#playlistContainer.querySelector('.playlist-item.playing')
         let tracks = this.#playlistContainer.querySelectorAll('.playlist-item')
         if (this._repeatOne) {
-            this.progressChanged({value: 0});
+            this.progressChanged({ value: 0 });
             return;
-        }if (this._shuffle) {
+        } if (this._shuffle) {
             this.playTrack(tracks.item(getRandomArbitrary(0, tracks.length - 1)))
             return;
         }
@@ -386,16 +379,16 @@ class jPlayer extends HTMLElement {
             return;
         }
 
-        libopenmpt._openmpt_module_set_repeat_count(this._trackerNode.modulePtr, this._repeatOne? -1 : 0);
+        libopenmpt._openmpt_module_set_repeat_count(this._trackerNode.modulePtr, this._repeatOne ? -1 : 0);
         libopenmpt._openmpt_module_set_render_param(this._trackerNode.modulePtr, OPENMPT_MODULE_RENDER_STEREOSEPARATION_PERCENT, this._trackerPlayer.config.stereoSeparation);
         libopenmpt._openmpt_module_set_render_param(this._trackerNode.modulePtr, OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH, this._trackerPlayer.config.interpolationFilter);
 
         this._trackerPlayer.currentPlayingNode = this._trackerNode;
         this._trackerNode.connect(this._trackerAudioContext.destination);
     }
-    
+
     async playTrack(el) {
-        let track = this._fetchedPlaylist.find(({src}) => src === el.dataset.src);
+        let track = this._fetchedPlaylist.find(({ src }) => src === el.dataset.src);
         let source = this._playlistSources.find((data) => data.src === el.dataset.src);
         let data = await this.processMetadata(source, track, this._fetchedPlaylist.indexOf(track), el.dataset.art);
 
@@ -420,8 +413,6 @@ class jPlayer extends HTMLElement {
             this._trackerPlayer.load(el.dataset.src, (out) => {
                 clearInterval(this._trackerInterval);
                 this.playTracker(out);
-                console.log(el.dataset.src);
-                console.log(out);
                 this._trackerInterval = setInterval(() => this.progress(), 50);
                 this._trackerPlayer.currentPlayingNode.addEventListener('timeupdate', () => this.progress());
                 if (!isPlaying)
@@ -476,7 +467,7 @@ class jPlayer extends HTMLElement {
             return { ok: false };
         }
     }
-    
+
     async processMetadata(el, fetchedData, index, art = undefined) {
         if (fetchedData.ok) {
             try {
@@ -506,7 +497,7 @@ class jPlayer extends HTMLElement {
                 });
 
                 metadata.info.mainPicture.load();
-    
+
                 trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0);
                 return trackInfo;
             } catch (error) {
@@ -515,7 +506,7 @@ class jPlayer extends HTMLElement {
         }
         return this.createDefaultTrackInfo(el, index);
     }
-    
+
     async processTrackerMetadata(el, buffer, index, error) {
         if (this._trackerPlayer) {
             return new Promise((resolve) => {
@@ -532,10 +523,9 @@ class jPlayer extends HTMLElement {
                         artist: el.dataset.artist ?? metadata['artist'] ?? "Unknown artist",
                         album: el.dataset.album ?? metadata['type'].toUpperCase() ?? '',
                         art: el.dataset.art ?? this._fallback,
-                        tracker: metadata['type']? true : false,
+                        tracker: metadata['type'] ? true : false,
                     };
                     trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0, 'tracker');
-                    console.log(trackInfo);
                     resolve(trackInfo);
                 } catch {
                     const trackInfo = {
@@ -560,7 +550,7 @@ class jPlayer extends HTMLElement {
             resolve(trackInfo);
         }
     }
-    
+
     createDefaultTrackInfo(el, index) {
         const parts = el.src.split('/');
         const trackInfo = {
@@ -573,7 +563,7 @@ class jPlayer extends HTMLElement {
         trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0);
         return trackInfo;
     }
-    
+
     async updatePlaylist() {
         this._fallback = this.getAttribute('fallback');
         this._playlistSources = Array.from(this.querySelectorAll('source'));
@@ -583,7 +573,6 @@ class jPlayer extends HTMLElement {
         ));
         this._style = await (await fetch(this.getAttribute('css'))).text();
         this._solo = this.getAttribute('solo') ? true : false;
-        console.log(this);
         setTimeout(() => this.render(), 500);
     }
 }
@@ -600,7 +589,7 @@ function getRandomArbitrary(min, max) {
 
 function getType(base64String) {
     if (!base64String ?? typeof base64String !== 'string' ?? !base64String.startsWith('data:')) {
-      return null;
+        return null;
     }
     const dataURIPart = base64String.substring(5, base64String.indexOf(';'));
     return dataURIPart;
@@ -608,7 +597,7 @@ function getType(base64String) {
 
 function formatTime(seconds) {
     let s = Math.floor(seconds / 60).toString()
-    + ":" + Math.floor(seconds % 60).toString().padStart(2, "0")
+        + ":" + Math.floor(seconds % 60).toString().padStart(2, "0")
     return s === 'NaN:NaN' ? '0:00' : s;
 }
 
