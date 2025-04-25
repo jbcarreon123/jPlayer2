@@ -75,7 +75,7 @@
             margin: auto;
             width: calc(100% + 80px);
             opacity: .3;
-            animation: bgmove 30s infinite linear alternate;
+            animation: bgmove 30s infinite ease-in-out alternate;
             object-fit: cover;
         }
     }
@@ -104,6 +104,13 @@
         text-wrap-mode: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    span[data-tracker] {
+        padding: 2px;
+        border-radius: 3px;
+        background-color: var(--jplayer-acc);
+        font-size: 0.85em;
     }
 
     #jplayer--playing-card {

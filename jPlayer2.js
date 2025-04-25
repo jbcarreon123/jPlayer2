@@ -1,3 +1,6 @@
+/// <reference path="demo/chiptune2.js" />
+/// <reference path="demo/libopenmpt.js" />
+
 class jPlayer extends HTMLElement {
     _audioPlayer;
     _trackerPlayer;
@@ -26,7 +29,7 @@ class jPlayer extends HTMLElement {
                     </div>
                     <div class="track-info">
                         <h2><span class="ms">equalizer</span> ${track.title}</h2>
-                        <p>${track.artist}${track.album != '' ? ' - ' + track.album : ''}</p>
+                        <p><span>${track.artist}</span> <span ${track.tracker ? 'data-tracker="true"' : ''}>${track.album != '' ? (!track.tracker ? '- ' : ' ') + track.album : ''}</span></p>
                     </div>
                 </div>
                 <div class="card-background">
@@ -48,7 +51,7 @@ class jPlayer extends HTMLElement {
                             </div>
                             <div class="track-info">
                                 <h1>${currentTrack?.title}</h1>
-                                <p>${currentTrack?.artist}${currentTrack?.album != '' ? ' - ' + currentTrack?.album : ''}</p>
+                                <p><span>${currentTrack?.artist}</span> <span ${currentTrack?.tracker ? 'data-tracker="true"' : ''}>${currentTrack?.album != '' ? (!currentTrack?.tracker ? '- ' : ' ') + currentTrack?.album : ''}</span></p>
                             </div>
                         </div>
                         <div class="controls">
@@ -139,6 +142,7 @@ class jPlayer extends HTMLElement {
         progressBar.addEventListener('input', () => this.progressChanged(progressBar));
 
         this.rendered = true;
+        this.emit('load');
     }
 
     constructor() {
@@ -147,6 +151,8 @@ class jPlayer extends HTMLElement {
         this._shadow = this.attachShadow({ mode: 'open' });
         this._playlist = [];
         this._playlistArt = [];
+        /** @type {HTMLSourceElement[]} */
+        this._playlistSources = [];
         this._observer = new MutationObserver(async () => await this.updatePlaylist())
         this._audioPlayer = new Audio();
         this._audioPlayer.addEventListener('timeupdate', () => this.progress());
@@ -155,13 +161,22 @@ class jPlayer extends HTMLElement {
 
         if (typeof ChiptuneJsPlayer !== 'undefined') {
             window['libopenmpt'] = Module;
-            this._trackerPlayer = new ChiptuneJsPlayer(new ChiptuneJsConfig(0));
-            setInterval(() => this.progress(), 250);
+            this._trackerAudioContext = new AudioContext();
+            this._trackerPlayer = new ChiptuneJsPlayer(new ChiptuneJsConfig(0, undefined, undefined, this._trackerAudioContext));
         }
 
         if (typeof window.jsmediatags !== 'undefined') {
             this._mediaTags = window.jsmediatags;
         }
+    }
+
+    emit(type, detail = {}) {
+        let ev = new CustomEvent(`jPlayer2:${type}`, {
+            bubbles: true,
+            detail: detail
+        })
+
+        return this.dispatchEvent(ev);
     }
 
     connectedCallback() {
@@ -174,13 +189,12 @@ class jPlayer extends HTMLElement {
 
     seek(secs) {
         if (this._trackerPlayer.currentPlayingNode !== null) {
-            let duration = this._trackerPlayer.duration();
             let module = this._trackerPlayer.currentPlayingNode.modulePtr;
             libopenmpt._openmpt_module_set_position_seconds(module, secs);
         } else {
-            let duration = this._audioPlayer.duration;
             this._audioPlayer.currentTime = secs;
         }
+        this.emit('seek', secs)
     }
 
     progressChanged(el) {
@@ -188,9 +202,11 @@ class jPlayer extends HTMLElement {
             let duration = this._trackerPlayer.duration();
             let module = this._trackerPlayer.currentPlayingNode.modulePtr;
             libopenmpt._openmpt_module_set_position_seconds(module, (el.value / 1000000) * duration);
+            this.emit('seek', (el.value / 1000000) * duration);
         } else {
             let duration = this._audioPlayer.duration;
             this._audioPlayer.currentTime = (el.value / 1000000) * duration;
+            this.emit('seek', (el.value / 1000000) * duration);
         }
     }
 
@@ -221,14 +237,16 @@ class jPlayer extends HTMLElement {
                 if ("mediaSession" in navigator) {
                     navigator.mediaSession.setPositionState({
                         duration: duration,
-                        position: position - 10
+                        position: position
                     })
                 }
 
-                if (position > 1 && duration > 1 && position >= (duration - 0.3)) {
+                if (position > 1 && duration > 1 && position >= (duration - 0.15)) {
                     console.log('next mod track')
                     this.nextTrack();
                 }
+
+                this.emit('timeUpdate', position);
             } else {
                 let duration = this._audioPlayer.duration;
                 let position = this._audioPlayer.currentTime;
@@ -241,9 +259,11 @@ class jPlayer extends HTMLElement {
                 if ("mediaSession" in navigator) {
                     navigator.mediaSession.setPositionState({
                         duration: duration,
-                        position: position - 10
+                        position: position
                     })
                 }
+
+                this.emit('timeUpdate', position);
             }
         } catch {}
     }
@@ -265,7 +285,11 @@ class jPlayer extends HTMLElement {
 
         if (this._trackerPlayer.currentPlayingNode === null) {
             this._audioPlayer.loop = this._repeatOne;
+        } else {
+            libopenmpt._openmpt_module_set_repeat_count(this._trackerNode.modulePtr, this._repeatOne? -1 : 0);
         }
+
+        this.emit('repeat', { all: this._repeat, one: this._repeat });
     }
 
     playPause(el, play = undefined) {
@@ -301,6 +325,8 @@ class jPlayer extends HTMLElement {
             navigator.mediaSession.playbackState = paused? "playing" : "paused";
             console.log(navigator.mediaSession.playbackState);
         }
+
+        this.emit('playChanged', !paused);
     }
 
     shuffle(el) {
@@ -311,12 +337,14 @@ class jPlayer extends HTMLElement {
             this._shuffle = true;
             el.innerHTML = 'shuffle_on'
         }
+
+        this.emit('shuffle', this._shuffle);
     }
 
     prevTrack() {
         let el = this.#playlistContainer.querySelector('.playlist-item.playing')
         let tracks = this.#playlistContainer.querySelectorAll('.playlist-item')
-        if (this.getProgress() > 3 || this._repeatOne == true) {
+        if (this.getProgress() > 3) {
             this.progressChanged({value: 0});
             return;
         } else if (this._shuffle) {
@@ -332,13 +360,7 @@ class jPlayer extends HTMLElement {
     nextTrack() {
         let el = this.#playlistContainer.querySelector('.playlist-item.playing')
         let tracks = this.#playlistContainer.querySelectorAll('.playlist-item')
-        if (this._repeatOne == true) {
-            console.log('repeat one, repeating track')
-            this.progressChanged({value: 0});
-            let playPause = this.#playingContainer.querySelector('#playpause');
-            this.playPause(playPause, true);
-            return;
-        } else if (this._shuffle) {
+        if (this._shuffle) {
             this.playTrack(tracks.item(getRandomArbitrary(0, tracks.length - 1)))
             return;
         }
@@ -354,9 +376,25 @@ class jPlayer extends HTMLElement {
         this.playTrack(tracks.item(trackIndex + 1) ?? tracks.item(this._repeat ? 0 : trackIndex));
     }
 
+    playTracker(buf) {
+        this._trackerPlayer.stop();
+        this._trackerNode = this._trackerPlayer.createLibopenmptNode(buf, this._trackerPlayer.config);
+        if (!this._trackerNode) {
+            return;
+        }
+
+        libopenmpt._openmpt_module_set_repeat_count(this._trackerNode.modulePtr, this._repeatOne? -1 : 0);
+        libopenmpt._openmpt_module_set_render_param(this._trackerNode.modulePtr, OPENMPT_MODULE_RENDER_STEREOSEPARATION_PERCENT, this._trackerPlayer.config.stereoSeparation);
+        libopenmpt._openmpt_module_set_render_param(this._trackerNode.modulePtr, OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH, this._trackerPlayer.config.interpolationFilter);
+
+        this._trackerPlayer.currentPlayingNode = this._trackerNode;
+        this._trackerNode.connect(this._trackerAudioContext.destination);
+    }
+    
     async playTrack(el) {
         let track = this._fetchedPlaylist.find(({src}) => src === el.dataset.src);
-        let data = await this.processMetadata(el, track, this._fetchedPlaylist.indexOf(track));
+        let source = this._playlistSources.find((data) => data.src === el.dataset.src);
+        let data = await this.processMetadata(source, track, this._fetchedPlaylist.indexOf(track), el.dataset.art);
 
         let playPause = this.#playingContainer.querySelector('#playpause');
 
@@ -364,7 +402,7 @@ class jPlayer extends HTMLElement {
         this.#playingContainer.querySelector('.card-background img').src = el.dataset.art;
 
         this.#playingContainer.querySelector('.track-info h1').textContent = data.title;
-        this.#playingContainer.querySelector('.track-info p').textContent = data.artist + ' - ' + data.album;
+        this.#playingContainer.querySelector('.track-info p').innerHTML = `<p><span>${data.artist}</span> <span ${data.tracker ? 'data-tracker="true"' : ''}>${data.album != '' ? (!data.tracker ? '- ' : ' ') + data.album : ''}</span></p>`;
 
         this.#playlistContainer.querySelectorAll('.playlist-item').forEach((el) => {
             el.classList.remove('playing');
@@ -377,18 +415,22 @@ class jPlayer extends HTMLElement {
             this._audioPlayer.pause();
             this._trackerPlayer.stop();
             this._trackerPlayer.load(el.dataset.src, (out) => {
+                clearInterval(this._trackerInterval);
+                this.playTracker(out);
                 console.log(el.dataset.src);
                 console.log(out);
-                this._trackerPlayer.play(out)
+                this._trackerInterval = setInterval(() => this.progress(), 50);
                 this._trackerPlayer.currentPlayingNode.addEventListener('timeupdate', () => this.progress());
                 if (!isPlaying)
                     this.playPause(playPause);
                 navigator.mediaSession.playbackState = 'playing';
             });
         } else {
+            clearInterval(this._trackerInterval);
             this._trackerPlayer.stop();
             this._audioPlayer.src = el.dataset.src;
             this._audioPlayer.load();
+            this._audioPlayer.loop = this._repeatOne;
             if (isPlaying)
                 this.playPause(playPause);
         }
@@ -411,6 +453,11 @@ class jPlayer extends HTMLElement {
             navigator.mediaSession.setActionHandler('pause', () => this.playPause(playPause));
             navigator.mediaSession.setActionHandler('seekto', (secs) => this.seek(secs.seekTime));
         }
+
+        this.emit('playing', {
+            ...data,
+            art: el.dataset.art
+        });
     }
 
     async fetchTrackData(el) {
@@ -427,7 +474,7 @@ class jPlayer extends HTMLElement {
         }
     }
     
-    async processMetadata(el, fetchedData, index) {
+    async processMetadata(el, fetchedData, index, art = undefined) {
         if (fetchedData.ok) {
             try {
                 const metadata = readMetadata(fetchedData.buffer);
@@ -436,7 +483,7 @@ class jPlayer extends HTMLElement {
                     title: metadata.info.trackTitle ?? el.dataset.title ?? "Unknown title",
                     artist: metadata.info.trackAuthor ?? el.dataset.artist ?? "Unknown artist",
                     album: metadata.info.albumTitle ?? metadata.info.trackTitle,
-                    art: metadata.info.mainPicture.image,
+                    art: art ?? metadata.info.mainPicture.image,
                     raw: metadata
                 };
 
@@ -445,10 +492,12 @@ class jPlayer extends HTMLElement {
                         const playlistItem = this._playlist.find(({ src }) => src === el.src);
                         const itemIndex = this._playlist.indexOf(playlistItem);
                         if (playlistItem) {
-                            playlistItem.art = metadata.info.mainPicture.image;
+                            playlistItem.art = art ?? metadata.info.mainPicture.image;
                             this._playlist[itemIndex] = playlistItem;
                             this._playlist[itemIndex]['html'] = this.renderPlaylistItem(this._playlist[itemIndex], index === 0);
-                            this.render();
+                            if (!art) {
+                                this.render();
+                            }
                         }
                     }, 100)
                 });
@@ -470,13 +519,15 @@ class jPlayer extends HTMLElement {
                 try {
                     this._trackerPlayer.play(buffer);
                     const metadata = this._trackerPlayer.metadata();
+                    console.log(metadata);
                     this._trackerPlayer.stop();
                     const trackInfo = {
                         src: el.src,
-                        title: metadata['title'] ?? el.dataset.title ?? "Unknown title",
-                        artist: metadata['artist'] ?? el.dataset.artist ?? "Unknown artist",
-                        album: '',
-                        art: el.dataset.art ?? this._fallback
+                        title: el.dataset.title ?? metadata['title'] ?? "Unknown title",
+                        artist: el.dataset.artist ?? metadata['artist'] ?? "Unknown artist",
+                        album: el.dataset.album ?? metadata['type'].toUpperCase() ?? '',
+                        art: el.dataset.art ?? this._fallback,
+                        tracker: metadata['type']? true : false,
                     };
                     trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0, 'tracker');
                     console.log(trackInfo);
@@ -521,9 +572,9 @@ class jPlayer extends HTMLElement {
     
     async updatePlaylist() {
         this._fallback = this.getAttribute('fallback');
-        const els = Array.from(this.querySelectorAll('source'));
-        this._fetchedPlaylist = await Promise.all(els.map(this.fetchTrackData));
-        this._playlist = await Promise.all(els.map((el, index) =>
+        this._playlistSources = Array.from(this.querySelectorAll('source'));
+        this._fetchedPlaylist = await Promise.all(this._playlistSources.map(this.fetchTrackData));
+        this._playlist = await Promise.all(this._playlistSources.map((el, index) =>
             this.processMetadata(el, this._fetchedPlaylist[index], index)
         ));
         this._style = await (await fetch(this.getAttribute('css'))).text();

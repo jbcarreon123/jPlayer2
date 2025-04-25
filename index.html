@@ -67,10 +67,26 @@
             <source src="/jPlayer2/demo/music/song1.mp3" />
             <source src="/jPlayer2/demo/music/song2.mp3" />
             <source src="/jPlayer2/demo/music/song3.mp3" />
-            <source src="/jPlayer2/demo/music/eek.it" />
+            <source src="/jPlayer2/demo/music/A Quiet Afternoon [Q0sjqZXFNyc].mp3" />
+            <source
+                src="/jPlayer2/demo/music/eek.it"
+                data-title="The Penis (Eek!)"
+                data-artist="Surasshu"
+                data-art="/jPlayer2/demo/music/eek.png"
+            />
             <source src="/jPlayer2/demo/music/twins-throwabomb.mod" />
+            <source
+                src="/jPlayer2/demo/music/GSLINGER.MOD"
+                data-artist="Jogeir Liljedahl"
+            />
         </player-container>
     </main>
+
+    <script>
+        document.addEventListener('jPlayer2:playing', (metadata) => {
+            document.title = 'jPlayer2 - ' + metadata.detail.title;
+        });
+    </script>
 </body>
 
 </html>
