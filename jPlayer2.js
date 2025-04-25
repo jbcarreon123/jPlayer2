@@ -522,7 +522,9 @@ class jPlayer extends HTMLElement {
                 try {
                     this._trackerPlayer.play(buffer);
                     const metadata = this._trackerPlayer.metadata();
-                    console.log(metadata);
+                    if (!metadata['type']) {
+                        resolve(this.createDefaultTrackInfo(el, index))
+                    }
                     this._trackerPlayer.stop();
                     const trackInfo = {
                         src: el.src,
@@ -543,7 +545,6 @@ class jPlayer extends HTMLElement {
                         album: '',
                         art: el.dataset.art ?? this._fallback
                     };
-                    trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0, 'tracker');
                     resolve(trackInfo);
                 }
             });
@@ -564,7 +565,7 @@ class jPlayer extends HTMLElement {
         const parts = el.src.split('/');
         const trackInfo = {
             src: el.src,
-            title: el.dataset.title ?? parts[parts.length - 1],
+            title: el.dataset.title ?? decodeURIComponent(parts[parts.length - 1]),
             artist: el.dataset.artist ?? "Unknown artist",
             album: el.dataset.album,
             art: el.dataset.art ?? this._fallback

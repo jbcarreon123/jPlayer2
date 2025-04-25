@@ -127,11 +127,17 @@
             padding: 6px;
             position: relative;
             z-index: 1;
-            max-width: 100%;
+            max-width: 65%;
 
             .track-info {
                 max-width: 100%;
                 overflow: hidden;
+
+                & > * {
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
             }
         }
 
