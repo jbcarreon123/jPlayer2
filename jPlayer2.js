@@ -225,7 +225,7 @@ class jPlayer extends HTMLElement {
                     })
                 }
 
-                if (position > 1 && duration > 1 && position >= (duration - 0.5)) {
+                if (position > 1 && duration > 1 && position >= (duration - 0.3)) {
                     console.log('next mod track')
                     this.nextTrack();
                 }
