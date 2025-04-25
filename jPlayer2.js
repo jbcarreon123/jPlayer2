@@ -360,7 +360,10 @@ class jPlayer extends HTMLElement {
     nextTrack() {
         let el = this.#playlistContainer.querySelector('.playlist-item.playing')
         let tracks = this.#playlistContainer.querySelectorAll('.playlist-item')
-        if (this._shuffle) {
+        if (this._repeatOne) {
+            this.progressChanged({value: 0});
+            return;
+        }if (this._shuffle) {
             this.playTrack(tracks.item(getRandomArbitrary(0, tracks.length - 1)))
             return;
         }
@@ -369,7 +372,7 @@ class jPlayer extends HTMLElement {
         let trackVal = Object.values(tracks);
         let track = trackVal.find((val) => val.dataset.src === el.dataset.src);
         let trackIndex = trackVal.indexOf(track);
-        if (trackIndex === tracks.length - 1 && !this._repeat) {
+        if (trackIndex === tracks.length - 1 && !this._repeat && !this._repeatOne) {
             let playPause = this.#playingContainer.querySelector('#playpause');
             playPause.innerHTML = 'play_arrow'
         }
