@@ -25,6 +25,7 @@ class jPlayer extends HTMLElement {
             <article>
                 <h1>Please wait... jPlayer2 is loading...</h1>
                 <p id="jplayer--loading-status"></p>
+                <p>Want to remove the thing above? Just remove it on the renderLoading() function.</p>
             </article>
         `
     }
@@ -468,7 +469,7 @@ class jPlayer extends HTMLElement {
     async fetchTrackData(el) {
         try {
             let loading = this._shadow.querySelector('#jplayer--loading-status');
-            if (loading) loading.textContent = `Fetching: ${el.src}`
+            if (loading) loading.innerHTML += `<br />Fetching: ${el.src}`
             const response = await fetch(el.src);
             if (!response.ok) {
                 return { ok: false };
@@ -484,7 +485,7 @@ class jPlayer extends HTMLElement {
     async processMetadata(el, fetchedData, index, art = undefined) {
         if (fetchedData.ok) {
             let loading = this._shadow.querySelector('#jplayer--loading-status');
-            if (loading) loading.textContent = `Processing metadata: ${el.src}`;
+            if (loading) loading.innerHTML += `<br />Processing metadata: ${el.src}`;
             try {
                 const metadata = readMetadata(fetchedData.buffer);
                 const trackInfo = {
