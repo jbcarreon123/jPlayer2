@@ -106,11 +106,12 @@
         text-overflow: ellipsis;
     }
 
-    span[data-tracker] {
+    span.mode {
         padding: 2px;
         border-radius: 3px;
         background-color: var(--jplayer-acc);
         font-size: 0.85em;
+        text-transform: uppercase;
     }
 
     #jplayer--playing-card {
@@ -129,7 +130,7 @@
             z-index: 1;
             max-width: 65%;
 
-            .track-info {
+            .track-info:not(.error) {
                 max-width: 100%;
                 overflow: hidden;
 
@@ -138,6 +139,10 @@
                     overflow: hidden;
                     text-overflow: ellipsis;
                 }
+            }
+
+            .track-info.error > * {
+                text-wrap-mode: wrap;
             }
         }
 
