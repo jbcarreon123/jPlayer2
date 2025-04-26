@@ -117,7 +117,10 @@ class jPlayer extends HTMLElement {
     renderPlaylistCard() {
         return /* html */ `
                 <section id="jplayer--playlist-card" style="display: ${this._solo ? 'none' : ''};">
-                    ${this._playlist.map(({ html }) => html).join('')}
+                    ${this._playlist.length > 0 ?
+                        `${this._playlist.map(({ html }) => html).join('')}` :
+                        `Loading tracks...`
+                    }
                 </section>
             `;
     }
@@ -458,7 +461,11 @@ class jPlayer extends HTMLElement {
                     this._trackerPlayer?.currentPlayingNode.addEventListener('timeupdate', () => this.progress());
                     if (!isPlaying)
                         this.playPause(playPause);
-                    navigator.mediaSession.playbackState = 'playing';
+                    else {
+                        navigator.mediaSession.playbackState = 'playing';
+                        let playPause = this.#playingContainer.querySelector('#playpause');
+                        playPause.innerHTML = 'pause'
+                    }
                 });
             } else {
                 console.log('loading file');
@@ -597,8 +604,12 @@ class jPlayer extends HTMLElement {
                 this._trackerPlayer?.stop();
             }
         } else {
-            console.error('Cannot load file', el.src);
-            return undefined;
+            if (this._trackerPlayer) {
+                return this.createDefaultTrackInfo(el, index, true);
+            } else {
+                console.error('Cannot load file', el.src);
+                return undefined;
+            }
         }
     }
 
@@ -653,7 +664,10 @@ class jPlayer extends HTMLElement {
             this._style = '';
         }
 
-        setTimeout(() => this.render(), 10);
+        setTimeout(() => {
+            this.render();
+            this.initListeners();
+        }, 10);
     }
 }
 
