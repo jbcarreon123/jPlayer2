@@ -15,7 +15,7 @@ Based on [duducat-music-player](https://github.com/ducdat0507/stuff/tree/main/mu
 - Support for the MediaSession API, ensuring that viewers can see the now playing track system-wide
 
 ## Installation
-To add jPlayer2 on your site, firstly download the `jPlayer2.js` and `jPlayer2.css`, and add it on the top inside your site's `<body>` like this:
+To add jPlayer2 on your site, firstly download the `jPlayer2.js` and `jPlayer2.css`, and add the script on the top inside your site's `<body>` like this:
 ```html
 <body>
     <script src="/where/is/jPlayer2.js"></script>
@@ -23,10 +23,12 @@ To add jPlayer2 on your site, firstly download the `jPlayer2.js` and `jPlayer2.c
 </body>
 ```
 
-Then, add it on anywhere on your site:
+Then, add it on anywhere on your site, and also specify where is the CSS file, you can also provide a fallback image:
 ```html
 <player-container
     title="My Music Player"
+    css="/where/is/jPlayer2.css"
+    fallback"/fallback.png"
     id="player"
 >
     <!-- Playlist tracks here -->
@@ -37,6 +39,8 @@ To add songs, just add a `<source>` tag inside `<player-container>`:
 ```html
 <player-container
     title="My Music Player"
+    css="/where/is/jPlayer2.css"
+    fallback"/fallback.png"
     id="player"
 >
     <source
@@ -44,26 +48,29 @@ To add songs, just add a `<source>` tag inside `<player-container>`:
         title="Never Gonna Give You Up"
         artist="Rick Astley"
         album="Whenever You Need Somebody"
-        albumArt="/test.png"
+        art="/test.png"
     />
 </player-container>
 ```
+> Note: Providing the metadata isn't required (the player would automatically fetch the ID3 metadata for you), but you can provide extra stuff with providing the metadata.
 
 ## Tracker files
 To have support for tracker files, download the `chiptune2.js` library found here and the `libopenmpt` library found here (note: download the Web version!), and add it above the jPlayer JS import (make sure it's on this order or it won't work!):
 ```html
-<head>
+<body>
     <script src="/where/is/libopenmpt.js"></script>
     <script src="/where/is/chiptune2.js"></script>
     <script src="/where/is/jPlayer2.js"></script>
     <!-- other stuff -->
-</head>
+</body>
 ```
 
 Then, add a `<source>` tag inside `<player-container>`:
 ```html
 <player-container
     title="My Music Player"
+    css="/where/is/jPlayer2.css"
+    fallback"/fallback.png"
     id="player"
 >
     <source
@@ -83,12 +90,14 @@ Then, add a `<source>` tag inside `<player-container>`:
 ```
 
 ## Solo Track mode
-We also have support for single track only, without the playlist panel obstructing view! Just add the `solo` attribute on the `<player-container>` tag:
+We also have support for single track only, without the playlist panel obstructing view! Just add the `solo="true"` attribute on the `<player-container>` tag:
 ```html
 <player-container
     title="My Music Player"
+    css="/where/is/jPlayer2.css"
+    fallback"/fallback.png"
     id="player"
-    solo
+    solo="true"
 >
     <source
         src="/music/song1.mp3"
