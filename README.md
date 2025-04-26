@@ -1,5 +1,5 @@
 # jPlayer2
-A no-nonsense modern web player, designed for the indie web.
+A no-nonsense modern web player, designed for the indie web. Currently in beta.
 Based on [duducat-music-player](https://github.com/ducdat0507/stuff/tree/main/music-player).
 
 ![image](https://github.com/user-attachments/assets/02999760-ecbd-485e-9e1b-b706838e67eb)
@@ -78,13 +78,13 @@ Then, add a `<source>` tag inside `<player-container>`:
         title="Never Gonna Give You Up"
         artist="Rick Astley"
         album="Whenever You Need Somebody"
-        albumArt="/test.png"
+        art="/test.png"
     />
     <source
         src="/music/eek.it"
         title="eek!"
         artist="Surasshu"
-        albumArt="/test.png"
+        art="/test.png"
     />
 </player-container>
 ```
@@ -104,7 +104,7 @@ We also have support for single track only, without the playlist panel obstructi
         title="Never Gonna Give You Up"
         artist="Rick Astley"
         album="Whenever You Need Somebody"
-        albumArt="/test.png"
+        art="/test.png"
     />
 </player-container>
 ```
