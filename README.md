@@ -114,6 +114,15 @@ We also have support for single track only, without the playlist panel obstructi
 ### How can I autoplay music on jPlayer?
 For accessibility reasons, I decided to not support native autoplay on jPlayer2, so there will be no `autoplay` attribute. But if you wish, you can just hook to the `loaded` event of the player and just do play status there.
 
+### Does it work on media from other sites?
+Yes technically, but this isn't tested, and **will never be recommended**.  
+I recommend hosting the files directly on your site, as it's easier that way and would give less pain for you.
+
+But if you need to, for example you're hosting files on a seperate subdomain, make sure that the `Access-Control-Allow-Origin` header is set to your site, or probably `*` (not recommended).
+
+Also, if you use Catbox, I do not recommend hosting jPlayer2 or any media files on Catbox, mostly due to it being blocked on some countries and ISPs.
+
+
 ### I'm using Neocities with a free account, and can't seem to load jPlayer2 or the audio files.
 If you're using Neocities with a free account beyond 2024, you will discover a Content Security Policy error that prevents you from loading the player or the audio files.
 There are some solutions for this:

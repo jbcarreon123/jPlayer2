@@ -39,14 +39,14 @@ class jPlayer extends HTMLElement {
 
     renderPlaylistItem(track, isFirst, mode) {
         return /* html */ `
-                <button class="playlist-item${isFirst ? ' playing' : ''}"${mode ? ` data-mode=${mode}` : ''} data-src=${track.src} data-art=${track.art}>
+                <button class="playlist-item${isFirst && !this._noChoose ? ' playing' : ''}"${mode ? ` data-mode=${mode}` : ''} data-src=${track.src} data-art=${track.art}>
                     <div class="track-info-container">
                         <div class="album-art-container">
                             <img loading="lazy" src="${track.art}" alt="">
                         </div>
                         <div class="track-info">
                             <h2><span class="ms">equalizer</span> ${track.title}</h2>
-                            <p><span>${track.artist}</span> ${track.album ? `- <span>${track.album}</span>` : ''} ${mode ? `<span class="mode">${mode}</span>` : ''}</p>
+                            <p><span ${this._sameArtist ? 'style="display:none;"' : ''}>${track.artist}</span> ${track.album && !this._sameAlbum && !this._sameArtist ? '-' : ''} ${track.album && !this._sameAlbum ? `<span>${track.album}</span>` : ''} ${mode ? `<span class="mode">${mode}</span>` : ''}</p>
                         </div>
                     </div>
                     <div class="card-background">
@@ -73,7 +73,7 @@ class jPlayer extends HTMLElement {
         `
     }
 
-    renderPlayingCard(paused = false) {
+    renderPlayingCard(paused = false, hideControls = false) {
         const currentTrack = this._playlist[0];
         return /* html */ `
                 <section id="jplayer--playing-card">
@@ -81,14 +81,27 @@ class jPlayer extends HTMLElement {
                         <div class="player-controls">
                             <div class="now-playing-info">
                                 <div class="album-art-container">
-                                    <img loading="lazy" src="${currentTrack?.art}" alt="">
+                                    <img loading="lazy" src="${currentTrack?.art}" alt="" ${hideControls && (!this._sameArtist && !this._sameAlbum) ? 'style="display: none;"' : ''}>
                                 </div>
                                 <div class="track-info">
-                                    <h1>${currentTrack?.title}</h1>
-                                    <p><span>${currentTrack?.artist}</span> <span ${currentTrack?.tracker ? 'data-tracker="true"' : ''}>${currentTrack?.album != '' ? (!currentTrack?.tracker ? '- ' : ' ') + currentTrack?.album : ''}</span></p>
+                                    ${this._noChoose && this._paused ? /*html*/`
+                                        ${this._sameAlbum ? /*html*/`
+                                            <h1>${currentTrack?.album}</h1>
+                                            <p><span>${currentTrack?.artist}</span></p>
+                                        ` : this._sameArtist ? /*html*/`
+                                            <h1>${currentTrack?.artist}</h1>
+                                            <p></p>
+                                        ` : /*html*/`
+                                            <h1>No tracks are playing</h1>
+                                            <p></p>
+                                        `}    
+                                    ` : /*html*/`
+                                        <h1>${currentTrack?.title}</h1>
+                                        <p><span>${currentTrack?.artist}</span> <span ${currentTrack?.tracker ? 'data-tracker="true"' : ''}>${currentTrack?.album != '' ? (!currentTrack?.tracker ? '- ' : ' ') + currentTrack?.album : ''}</span></p>   
+                                    `}
                                 </div>
                             </div>
-                            <div class="controls">
+                            <div class="controls" ${hideControls? 'style="display: none;"' : ''}>
                                 <span id="pos">0:00</span>
                                 <span id="sep">/</span>
                                 <span id="dur">0:00</span>
@@ -145,7 +158,7 @@ class jPlayer extends HTMLElement {
                     ${this._style || ''}
                 </style>
                 <article id="jplayer--container">
-                    ${this.renderPlayingCard()}
+                    ${this.renderPlayingCard(false, this._noChoose)}
                     ${this.renderPlaylistCard()}
                 </article>
             `;
@@ -158,7 +171,7 @@ class jPlayer extends HTMLElement {
             el.addEventListener('click', () => this.playTrack(el));
         });
 
-        if (this.#playlistContainer?.querySelector('.playlist-item')) {
+        if (this.#playlistContainer?.querySelector('.playlist-item') && !this._noChoose) {
             this.playTrack(this.#playlistContainer.querySelector('.playlist-item'));
         }
 
@@ -648,6 +661,7 @@ class jPlayer extends HTMLElement {
 
     async updatePlaylist() {
         this._fallback = this.getAttribute('fallback');
+        this._noChoose = this.getAttribute('no-choose') !== null;
         const cssUrl = this.getAttribute('css');
         this._solo = this.getAttribute('solo') !== null;
         this._doTrackerMetadata = this.getAttribute('do-tracker-metadata') !== null;
@@ -668,6 +682,8 @@ class jPlayer extends HTMLElement {
         );
         this._playlist = await Promise.all(metadataPromises);
         this._playlist = this._playlist.filter((s) => s);
+        this._sameAlbum = this._playlist.every((val, i, arr) => val.album === (arr[i+1] ?? arr[0]).album);
+        this._sameArtist = this._playlist.every((val, i, arr) => val.artist === (arr[i+1] ?? arr[0]).artist);
 
         if (cssUrl) {
             try {
@@ -717,8 +733,7 @@ function isOverflowing(el)
    var curOverflow = getComputedStyle(el, 'overflow');
    if ( !curOverflow || curOverflow === "visible" )
       el.style.overflow = "hidden";
-   var isOverflowing = el.clientWidth < el.scrollWidth 
-      || el.clientHeight < el.scrollHeight;
+   var isOverflowing = el.clientWidth < el.scrollWidth;
    el.style.overflow = curOverflow;
    return isOverflowing;
 }
