@@ -39,14 +39,14 @@ class jPlayer extends HTMLElement {
 
     renderPlaylistItem(track, isFirst, mode) {
         return /* html */ `
-                <button class="playlist-item${isFirst && !this._noChoose ? ' playing' : ''}"${mode ? ` data-mode=${mode}` : ''} data-src=${track.src} data-art=${track.art}>
+                <button class="playlist-item${isFirst ? ' playing' : ''}"${mode ? ` data-mode=${mode}` : ''} data-src=${track.src} data-art=${track.art}>
                     <div class="track-info-container">
                         <div class="album-art-container">
                             <img loading="lazy" src="${track.art}" alt="">
                         </div>
                         <div class="track-info">
-                            <h2><span class="ms">equalizer</span> ${track.title}</h2>
-                            <p><span ${this._sameArtist ? 'style="display:none;"' : ''}>${track.artist}</span> ${track.album && !this._sameAlbum && !this._sameArtist ? '-' : ''} ${track.album && !this._sameAlbum ? `<span>${track.album}</span>` : ''} ${mode ? `<span class="mode">${mode}</span>` : ''}</p>
+                            <h2><span aria-hidden="true" class="ms" data-icon="equalizer"></span> ${track.title}</h2>
+                            <p><span>${track.artist}</span> ${track.album ? `- <span>${track.album}</span>` : ''} ${mode ? `<span class="mode">${mode}</span>` : ''}</p>
                         </div>
                     </div>
                     <div class="card-background">
@@ -73,7 +73,7 @@ class jPlayer extends HTMLElement {
         `
     }
 
-    renderPlayingCard(paused = false, hideControls = false) {
+    renderPlayingCard(paused = false) {
         const currentTrack = this._playlist[0];
         return /* html */ `
                 <section id="jplayer--playing-card">
@@ -81,39 +81,26 @@ class jPlayer extends HTMLElement {
                         <div class="player-controls">
                             <div class="now-playing-info">
                                 <div class="album-art-container">
-                                    <img loading="lazy" src="${currentTrack?.art}" alt="" ${hideControls && (!this._sameArtist && !this._sameAlbum) ? 'style="display: none;"' : ''}>
+                                    <img loading="lazy" src="${currentTrack?.art}" alt="">
                                 </div>
                                 <div class="track-info">
-                                    ${this._noChoose && this._paused ? /*html*/`
-                                        ${this._sameAlbum ? /*html*/`
-                                            <h1>${currentTrack?.album}</h1>
-                                            <p><span>${currentTrack?.artist}</span></p>
-                                        ` : this._sameArtist ? /*html*/`
-                                            <h1>${currentTrack?.artist}</h1>
-                                            <p></p>
-                                        ` : /*html*/`
-                                            <h1>No tracks are playing</h1>
-                                            <p></p>
-                                        `}    
-                                    ` : /*html*/`
-                                        <h1>${currentTrack?.title}</h1>
-                                        <p><span>${currentTrack?.artist}</span> <span ${currentTrack?.tracker ? 'data-tracker="true"' : ''}>${currentTrack?.album != '' ? (!currentTrack?.tracker ? '- ' : ' ') + currentTrack?.album : ''}</span></p>   
-                                    `}
+                                    <h1>${currentTrack?.title}</h1>
+                                    <p><span>${currentTrack?.artist}</span> <span ${currentTrack?.tracker ? 'data-tracker="true"' : ''}>${currentTrack?.album != '' ? (!currentTrack?.tracker ? '- ' : ' ') + currentTrack?.album : ''}</span></p>
                                 </div>
                             </div>
-                            <div class="controls" ${hideControls? 'style="display: none;"' : ''}>
+                            <div class="controls">
                                 <span id="pos">0:00</span>
                                 <span id="sep">/</span>
                                 <span id="dur">0:00</span>
                                 <div class="center">
                                     ${this._playlist.length > 1 ? `
-                                    <button class="ms" id="shuffle">shuffle</button>
-                                    <button class="ms" id="prev">skip_previous</button>
+                                    <button aria-hidden="true" class="ms" id="shuffle">shuffle</button>
+                                    <button aria-hidden="true" class="ms" id="prev">skip_previous</button>
                                     ` : ''}
-                                    <button class="ms" id="playpause">${this._paused || paused ? 'play_arrow' : 'pause'}</button>
+                                    <button aria-hidden="true" class="ms" id="playpause">${this._paused || paused ? 'play_arrow' : 'pause'}</button>
                                     ${this._playlist.length > 1 ? `
-                                    <button class="ms" id="next">skip_next</button>
-                                    <button class="ms" id="repeat">repeat</button>
+                                    <button aria-hidden="true" class="ms" id="next">skip_next</button>
+                                    <button aria-hidden="true" class="ms" id="repeat">repeat</button>
                                     ` : ''}
                                 </div>
                             </div>
@@ -133,9 +120,9 @@ class jPlayer extends HTMLElement {
         return /* html */ `
                 <section id="jplayer--playlist-card" style="display: ${this._solo ? 'none' : ''};">
                     ${this._playlist.length > 0 ?
-                        `${this._playlist.map(({ html }) => html).join('')}` :
-                        `Loading tracks...`
-                    }
+                `${this._playlist.map(({ html }) => html).join('')}` :
+                `Loading tracks...`
+            }
                 </section>
             `;
     }
@@ -158,7 +145,7 @@ class jPlayer extends HTMLElement {
                     ${this._style || ''}
                 </style>
                 <article id="jplayer--container">
-                    ${this.renderPlayingCard(false, this._noChoose)}
+                    ${this.renderPlayingCard()}
                     ${this.renderPlaylistCard()}
                 </article>
             `;
@@ -171,7 +158,7 @@ class jPlayer extends HTMLElement {
             el.addEventListener('click', () => this.playTrack(el));
         });
 
-        if (this.#playlistContainer?.querySelector('.playlist-item') && !this._noChoose) {
+        if (this.#playlistContainer?.querySelector('.playlist-item')) {
             this.playTrack(this.#playlistContainer.querySelector('.playlist-item'));
         }
 
@@ -180,10 +167,39 @@ class jPlayer extends HTMLElement {
         })
 
         this.initListeners();
-        this.loadOverflow();
+        setTimeout(() => this.loadOverflow(), 100);
 
         this.rendered = true;
         this.emit('load');
+    }
+
+    constructor() {
+        super();
+        this._internals = this.attachInternals();
+        this._shadow = this.attachShadow({ mode: 'open' });
+        this._mutationObserver = new MutationObserver(() => this.updatePlaylist());
+        this._intersectionObserver = null;
+        this._audioPlayer = new Audio();
+        this._paused = true;
+
+        this._audioPlayer.addEventListener('durationchange', () => this.progress());
+        this._audioPlayer.addEventListener('timeupdate', () => this.progress());
+        this._audioPlayer.addEventListener('ended', () => this.nextTrack());
+
+        this._videoPlayer = document.createElement('video');
+
+        if (typeof ChiptuneJsPlayer !== 'undefined') {
+            window['libopenmpt'] = Module;
+            this._trackerAudioContext = new AudioContext();
+            this._trackerPlayer = new ChiptuneJsPlayer(new ChiptuneJsConfig(0, undefined, undefined, this._trackerAudioContext));
+        }
+
+        if (typeof window.jsmediatags !== 'undefined') {
+            this._mediaTags = window.jsmediatags;
+        }
+
+        this._shadow.innerHTML = this.renderLoading();
+        this._playlistPlaceholder = this._shadow.querySelector('article');
     }
 
     loadOverflow() {
@@ -216,44 +232,49 @@ class jPlayer extends HTMLElement {
 
         const videoElement = this.#playingContainer?.querySelector('#jplayer--video-player');
         videoElement?.appendChild(this._videoPlayer);
-
-        this.loadOverflow();
-    }
-
-    constructor() {
-        super();
-        this._internals = this.attachInternals();
-        this._shadow = this.attachShadow({ mode: 'open' });
-        this._observer = new MutationObserver(() => this.updatePlaylist());
-        this._audioPlayer = new Audio();
-        this._paused = true;
-
-        this._audioPlayer.addEventListener('durationchange', () => this.progress());
-        this._audioPlayer.addEventListener('timeupdate', () => this.progress());
-        this._audioPlayer.addEventListener('ended', () => this.nextTrack());
-
-        this._videoPlayer = document.createElement('video');
-
-        if (typeof ChiptuneJsPlayer !== 'undefined') {
-            window['libopenmpt'] = Module;
-            this._trackerAudioContext = new AudioContext();
-            this._trackerPlayer = new ChiptuneJsPlayer(new ChiptuneJsConfig(0, undefined, undefined, this._trackerAudioContext));
-        }
-
-        if (typeof window.jsmediatags !== 'undefined') {
-            this._mediaTags = window.jsmediatags;
-        }
-
-        this._shadow.innerHTML = this.renderLoading();
     }
 
     connectedCallback() {
-        this._observer.observe(this, { childList: true });
-        this.updatePlaylist();
+        this._intersectionObserver = new IntersectionObserver(this._handleIntersection.bind(this), {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        });
+        this._intersectionObserver.observe(this._playlistPlaceholder);
     }
 
     disconnectedCallback() {
-        this._observer.disconnect();
+        this._mutationObserver.disconnect();
+        if (this._intersectionObserver) {
+            this._intersectionObserver.unobserve(this._playlistPlaceholder);
+            this._intersectionObserver.disconnect();
+            this._intersectionObserver = null;
+        }
+    }
+
+    _handleIntersection(entries, observer) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                console.log('player is loading');
+                this._mutationObserver.observe(this, { childList: true });
+                const placeholder = entry.target;
+                const placeholderStyle = window.getComputedStyle(placeholder);
+                const hostElement = this;
+                if (placeholderStyle.display === 'none' || placeholderStyle.visibility === 'hidden') {
+                    return;
+                }
+                let parent = hostElement.parentElement;
+                while (parent) {
+                    const parentStyle = window.getComputedStyle(parent);
+                    if (parentStyle.display === 'none' || parentStyle.visibility === 'hidden') {
+                        return;
+                    }
+                    parent = parent.parentElement;
+                }
+                observer.unobserve(placeholder);
+                this.updatePlaylist();
+            }
+        });
     }
 
     emit(type, detail = {}) {
@@ -503,7 +524,7 @@ class jPlayer extends HTMLElement {
                     }
                 });
             } else {
-                console.log('loading file');
+
                 clearInterval(this._trackerInterval);
                 this._trackerPlayer?.stop();
                 this._audioPlayer.src = el.dataset.src;
@@ -642,7 +663,7 @@ class jPlayer extends HTMLElement {
             if (this._trackerPlayer) {
                 return this.createDefaultTrackInfo(el, index, true);
             } else {
-                console.error('Cannot load file', el.src);
+                console.error('Cannot load file', el.src, error);
                 return undefined;
             }
         }
@@ -660,8 +681,9 @@ class jPlayer extends HTMLElement {
     }
 
     async updatePlaylist() {
+        if (this._playlist.length > 0) return;
+
         this._fallback = this.getAttribute('fallback');
-        this._noChoose = this.getAttribute('no-choose') !== null;
         const cssUrl = this.getAttribute('css');
         this._solo = this.getAttribute('solo') !== null;
         this._doTrackerMetadata = this.getAttribute('do-tracker-metadata') !== null;
@@ -682,8 +704,6 @@ class jPlayer extends HTMLElement {
         );
         this._playlist = await Promise.all(metadataPromises);
         this._playlist = this._playlist.filter((s) => s);
-        this._sameAlbum = this._playlist.every((val, i, arr) => val.album === (arr[i+1] ?? arr[0]).album);
-        this._sameArtist = this._playlist.every((val, i, arr) => val.artist === (arr[i+1] ?? arr[0]).artist);
 
         if (cssUrl) {
             try {
@@ -728,14 +748,13 @@ function getType(base64String) {
 }
 
 /** @param {HTMLElement} el  */
-function isOverflowing(el)
-{
-   var curOverflow = getComputedStyle(el, 'overflow');
-   if ( !curOverflow || curOverflow === "visible" )
-      el.style.overflow = "hidden";
-   var isOverflowing = el.clientWidth < el.scrollWidth;
-   el.style.overflow = curOverflow;
-   return isOverflowing;
+function isOverflowing(el) {
+    var curOverflow = getComputedStyle(el, 'overflow');
+    if (!curOverflow || curOverflow === "visible")
+        el.style.overflow = "hidden";
+    var isOverflowing = el.clientWidth < el.scrollWidth;
+    el.style.overflow = curOverflow;
+    return isOverflowing;
 }
 
 function formatTime(seconds) {
@@ -746,7 +765,7 @@ function formatTime(seconds) {
 
 /** @param {ArrayBuffer} buffer  */
 function readMetadata(buffer) {
-    metadata = { info: {}, tags: [] };
+    var metadata = { info: {}, tags: [] };
     let dec = new TextDecoder("windows-1252");
     let dv = new DataView(buffer, 0);
 
