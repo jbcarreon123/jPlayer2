@@ -597,6 +597,7 @@ class jPlayer extends HTMLElement {
             let loading = this._shadow.querySelector('#jplayer--loading-status');
             if (loading) loading.innerHTML += `<br />Processing metadata: ${el.src}`;
             try {
+                if (!isAudioFile(fetchedData.buffer)) throw new Error("Not audio file, trying tracker...")
                 const metadata = readMetadata(fetchedData.buffer);
                 const trackInfo = {
                     src: el.src,
@@ -607,7 +608,9 @@ class jPlayer extends HTMLElement {
                     raw: metadata
                 };
 
-                metadata.info.mainPicture.register(() => {
+                console.trace(trackInfo);
+
+                metadata.info.mainPicture?.register(() => {
                     if (metadata.info.mainPicture?.image) {
                         trackInfo.art = art ?? metadata.info.mainPicture.image;
                     } else if (el.dataset.art) {
@@ -632,6 +635,7 @@ class jPlayer extends HTMLElement {
                 trackInfo['html'] = this.renderPlaylistItem(trackInfo, index === 0);
                 return trackInfo;
             } catch (error) {
+                console.trace(error);
                 return await this.processTrackerMetadata(el, fetchedData.buffer, index, error);
             }
         }
@@ -642,6 +646,10 @@ class jPlayer extends HTMLElement {
         if (this._trackerPlayer && this._doTrackerMetadata) {
             try {
                 this._trackerPlayer?.play(buffer);
+                console.log('detecting tracker file'); 
+                let duration = this._trackerPlayer?.duration();
+                console.log(duration); 
+                if (duration < 1) throw new Error();
                 const metadata = this._trackerPlayer?.metadata();
                 const trackInfo = {
                     src: el.src,
@@ -693,7 +701,7 @@ class jPlayer extends HTMLElement {
             this.fetchTrackData(el)
                 .catch(error => {
                     console.error(`Error fetching ${el.src}:`, error);
-                    return { ok: false }; // Ensure a consistent failure object
+                    return { ok: false };
                 })
         );
 
@@ -939,6 +947,112 @@ function readMetadata(buffer) {
         }
     }
     return metadata;
+}
+
+function isAudioFile(buffer) {
+    var mimes = [
+        {
+            mime: 'audio/mpeg',
+            pattern: [0xFF, 0xFB],
+            mask: [0xFF, 0xE0],
+        },
+        {
+            mime: 'audio/mpeg',
+            pattern: [0xFF, 0xFA],
+            mask: [0xFF, 0xE0],
+        },
+        {
+            mime: 'audio/mpeg',
+            pattern: [0xFF, 0xF3],
+            mask: [0xFF, 0xE0],
+        },
+        {
+            mime: 'audio/mpeg',
+            pattern: [0xFF, 0xF2],
+            mask: [0xFF, 0xE0],
+        },
+        {
+            mime: 'audio/mpeg',
+            pattern: [0x49, 0x44, 0x33],
+            mask: [0xFF, 0xFF, 0xFF],
+        },
+        {
+            mime: 'audio/wav',
+            pattern: [0x52, 0x49, 0x46, 0x46],
+            mask: [0xFF, 0xFF, 0xFF, 0xFF],
+        },
+        {
+            mime: 'audio/ogg',
+            pattern: [0x4F, 0x67, 0x67, 0x53],
+            mask: [0xFF, 0xFF, 0xFF, 0xFF],
+        },
+        {
+            mime: 'audio/webm',
+            pattern: [0x1A, 0x45, 0xDF, 0xA3],
+            mask: [0xFF, 0xFF, 0xFF, 0xFF],
+        },
+        {
+            mime: 'audio/flac',
+            pattern: [0x66, 0x4C, 0x61, 0x43],
+            mask: [0xFF, 0xFF, 0xFF, 0xFF],
+        },
+        {
+            mime: 'audio/mp4',
+            pattern: [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x4D, 0x34, 0x41],
+            mask: [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+        },
+        {
+            mime: 'audio/mp4',
+            pattern: [0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x4D, 0x34, 0x41],
+            mask: [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+        },
+        {
+            mime: 'audio/aac',
+            pattern: [0xFF, 0xF1],
+            mask: [0xFF, 0xF6],
+        },
+        {
+            mime: 'audio/aac',
+            pattern: [0xFF, 0xF9],
+            mask: [0xFF, 0xF6],
+        },
+        {
+            mime: 'audio/aiff',
+            pattern: [0x46, 0x4F, 0x52, 0x4D],
+            mask: [0xFF, 0xFF, 0xFF, 0xFF],
+        }
+    ];
+
+    function check(bytes, mime) {
+        if (bytes.length < mime.pattern.length) {
+            return false;
+        }
+        
+        for (var i = 0, l = mime.mask.length; i < l; ++i) {
+            if ((bytes[i] & mime.mask[i]) - mime.pattern[i] !== 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    try {
+        var bytes = new Uint8Array(buffer);
+
+        for (var i = 0, l = mimes.length; i < l; ++i) {
+            if (check(bytes, mimes[i])) {
+                return true;
+            }
+        }
+
+        if (findMpegSync(bytes)) {
+            return true;
+        }
+
+        return false;
+    } catch (e) {
+        return false;
+    }
 }
 
 customElements.define("player-container", jPlayer);
